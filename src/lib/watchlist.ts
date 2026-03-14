@@ -1,0 +1,15 @@
+﻿export const WATCHLIST_ADDITIVES = [
+  "Нитриты/нитраты (E249–E252)",
+  "BHA (butylated hydroxyanisole)",
+  "BHT (butylated hydroxytoluene)",
+  "Potassium bromate",
+  "Southampton colours: E102, E104, E110, E122, E124, E129",
+  "Сульфиты (E220–E228)",
+  "Бензоаты (E210–E213)",
+  "Сорбаты (E200–E203)",
+  "Глутамат натрия (E621)",
+  "Аспартам (E951)",
+  "Ацесульфам К (E950)",
+  "Сахарин (E954)",
+  "Каррагинан (E407)",
+];
