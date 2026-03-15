@@ -125,6 +125,17 @@ export default function ScanForm() {
             void video.play();
           }
         }, 800);
+        window.setTimeout(() => {
+          if (video.videoWidth === 0 || video.videoHeight === 0) {
+            setError(
+              lang === "ru"
+                ? "Камера запущена, но изображение не получено. Попробуйте другой браузер (Safari/Chrome) или перезапустите страницу."
+                : lang === "tr"
+                ? "Kamera çalışıyor ama görüntü gelmiyor. Farklı tarayıcı deneyin veya sayfayı yenileyin."
+                : "Camera started but no video frame received. Try another browser or reload the page."
+            );
+          }
+        }, 1500);
       }
       setCameraOn(true);
       setCaptured(false);
@@ -304,7 +315,7 @@ export default function ScanForm() {
           )}
 
           {cameraOn && (
-            <div className="relative mt-3 overflow-hidden rounded-xl bg-black">
+            <div className="relative mt-3 overflow-hidden rounded-xl bg-transparent">
               {!captured ? (
                 <>
                   <video
@@ -314,6 +325,7 @@ export default function ScanForm() {
                     muted
                     autoPlay
                   />
+                  <div className="pointer-events-none absolute inset-0 bg-black/5" />
                   <div className="pointer-events-none absolute inset-4 rounded-2xl border-2 border-white/70" />
                   <div className="mt-4 flex gap-3">
                     <button
