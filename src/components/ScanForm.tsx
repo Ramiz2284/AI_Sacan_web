@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ResultCard from "@/components/ResultCard";
 import type { ProductAnalysis } from "@/lib/types";
 import { saveToHistory } from "@/lib/storage";
@@ -11,7 +11,6 @@ const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/heic", "
 export default function ScanForm() {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [userText, setUserText] = useState("");
   const [result, setResult] = useState<ProductAnalysis | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -19,12 +18,11 @@ export default function ScanForm() {
   const [savedId, setSavedId] = useState<string | null>(null);
   const [enhance, setEnhance] = useState(true);
   const [lang, setLang] = useState<AppLang>("ru");
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     setLang(getStoredLang());
   }, []);
-
-  const canSubmit = useMemo(() => !!file && !loading, [file, loading]);
 
   function handleFileChange(next: File | null) {
     setResult(null);
@@ -37,21 +35,23 @@ export default function ScanForm() {
     }
     const url = URL.createObjectURL(next);
     setPreviewUrl(url);
+    void handleAnalyze(next);
   }
 
-  async function handleAnalyze() {
-    if (!file) return;
+  async function handleAnalyze(forcedFile?: File) {
+    const fileToSend = forcedFile ?? file;
+    if (!fileToSend) return;
     setLoading(true);
     setError(null);
     setSaved(false);
     try {
-      const base64 = await fileToDataUrl(file, enhance);
+      const base64 = await fileToDataUrl(fileToSend, enhance);
       const controller = new AbortController();
       const timeout = window.setTimeout(() => controller.abort(), 45000);
       const response = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageDataUrl: base64, userText }),
+        body: JSON.stringify({ imageDataUrl: base64, userText: "" }),
         signal: controller.signal,
       });
       window.clearTimeout(timeout);
@@ -87,20 +87,28 @@ export default function ScanForm() {
         </h2>
         <p className="mt-2 text-sm text-neutral-600">
           {lang === "ru"
-            ? "Сделай фото или загрузи изображение. Можно добавить название или бренд."
+            ? "Нажми «Сканировать», чтобы сделать фото товара."
             : lang === "tr"
-            ? "Fotoğraf çek ya da görsel yükle. İstersen marka/isim ekle."
-            : "Take a photo or upload an image. You can add name or brand."}
+            ? "Ürünün fotoğrafını çekmek için «Tara»ya bas."
+            : "Tap “Scan” to take a product photo."}
         </p>
 
         <div className="mt-4 rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 p-4">
           <input
+            ref={fileInputRef}
             type="file"
             accept="image/*"
             capture="environment"
-            className="block w-full text-sm text-neutral-600 file:mr-4 file:rounded-full file:border-0 file:bg-neutral-900 file:px-4 file:py-2 file:text-white file:hover:bg-neutral-800"
+            className="hidden"
             onChange={(event) => handleFileChange(event.target.files?.[0] ?? null)}
           />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="tap-feedback w-full rounded-full bg-neutral-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-neutral-800"
+          >
+            {lang === "ru" ? "Сканировать" : lang === "tr" ? "Tara" : "Scan"}
+          </button>
           {previewUrl && (
             <img
               src={previewUrl}
@@ -118,26 +126,6 @@ export default function ScanForm() {
             : "OCR tip: focus on ingredients, avoid glare, and shoot closer."}
         </div>
 
-        <label className="mt-4 block text-sm font-medium text-neutral-700">
-          {lang === "ru"
-            ? "Название / бренд (необязательно)"
-            : lang === "tr"
-            ? "Ürün adı / marka (opsiyonel)"
-            : "Name / brand (optional)"}
-        </label>
-        <input
-          value={userText}
-          onChange={(event) => setUserText(event.target.value)}
-          placeholder={
-            lang === "ru"
-              ? "Например: Coca-Cola Zero 0.5L"
-              : lang === "tr"
-              ? "Örn: Coca-Cola Zero 0.5L"
-              : "e.g., Coca-Cola Zero 0.5L"
-          }
-          className="mt-2 w-full rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm outline-none focus:border-neutral-400"
-        />
-
         <label className="mt-4 flex items-center gap-3 text-sm text-neutral-700">
           <input
             type="checkbox"
@@ -152,24 +140,15 @@ export default function ScanForm() {
             : "Improve readability (contrast)"}
         </label>
 
-        <button
-          type="button"
-          onClick={handleAnalyze}
-          disabled={!canSubmit}
-          className="tap-feedback mt-6 w-full rounded-2xl bg-neutral-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-400"
-        >
-          {loading
-            ? lang === "ru"
+        {loading && (
+          <div className="mt-6 rounded-2xl bg-neutral-900 px-4 py-3 text-center text-sm font-semibold text-white">
+            {lang === "ru"
               ? "Анализирую..."
               : lang === "tr"
               ? "Analiz ediliyor..."
-              : "Analyzing..."
-            : lang === "ru"
-            ? "Анализировать"
-            : lang === "tr"
-            ? "Analiz et"
-            : "Analyze"}
-        </button>
+              : "Analyzing..."}
+          </div>
+        )}
 
         {error && <p className="mt-4 text-sm text-rose-600">{error}</p>}
         {saved && (
