@@ -89,8 +89,22 @@ export default function ScanForm() {
 
   async function startCamera() {
     try {
+      if (typeof window !== "undefined" && !window.isSecureContext) {
+        setError(
+          lang === "ru"
+            ? "Камера работает только по HTTPS."
+            : lang === "tr"
+            ? "Kamera yalnızca HTTPS üzerinden çalışır."
+            : "Camera works only over HTTPS."
+        );
+        return;
+      }
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { ideal: "environment" } },
+        video: {
+          facingMode: "environment",
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
         audio: false,
       });
       streamRef.current = stream;
@@ -102,12 +116,15 @@ export default function ScanForm() {
         video.playsInline = true;
         video.setAttribute("playsinline", "true");
         video.setAttribute("webkit-playsinline", "true");
-        video.onloadedmetadata = () => {
-          void video.play();
-        };
-        video.onloadeddata = () => {
-          void video.play();
-        };
+        video.onloadedmetadata = () => void video.play();
+        video.onloadeddata = () => void video.play();
+        video.oncanplay = () => void video.play();
+        void video.play();
+        window.setTimeout(() => {
+          if (video.readyState < 2) {
+            void video.play();
+          }
+        }, 800);
       }
       setCameraOn(true);
       setCaptured(false);
