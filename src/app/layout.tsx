@@ -1,13 +1,13 @@
 ﻿import type { Metadata } from "next";
-import { Fraunces, Manrope } from "next/font/google";
+import { Noto_Sans, Noto_Serif } from "next/font/google";
 import "./globals.css";
 
-const fraunces = Fraunces({
+const notoSerif = Noto_Serif({
   variable: "--font-fraunces",
   subsets: ["latin", "latin-ext", "cyrillic", "cyrillic-ext"],
 });
 
-const manrope = Manrope({
+const notoSans = Noto_Sans({
   variable: "--font-manrope",
   subsets: ["latin", "latin-ext", "cyrillic", "cyrillic-ext"],
 });
@@ -25,7 +25,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ru">
-      <body className={`${fraunces.variable} ${manrope.variable} antialiased`}>
+      <body className={`${notoSerif.variable} ${notoSans.variable} antialiased`}>
         {children}
       </body>
     </html>
