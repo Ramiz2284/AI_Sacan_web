@@ -1,9 +1,10 @@
 ﻿"use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import ResultCard from "@/components/ResultCard";
 import type { ProductAnalysis } from "@/lib/types";
 import { saveToHistory } from "@/lib/storage";
+import { AppLang, getStoredLang } from "@/lib/i18n";
 
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"];
 
@@ -17,6 +18,11 @@ export default function ScanForm() {
   const [saved, setSaved] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(null);
   const [enhance, setEnhance] = useState(true);
+  const [lang, setLang] = useState<AppLang>("ru");
+
+  useEffect(() => {
+    setLang(getStoredLang());
+  }, []);
 
   const canSubmit = useMemo(() => !!file && !loading, [file, loading]);
 
@@ -76,9 +82,15 @@ export default function ScanForm() {
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr,1.2fr]">
       <div className="rounded-3xl border border-black/10 bg-white/70 p-6 shadow-[0_20px_60px_-40px_rgba(0,0,0,0.5)]">
-        <h2 className="text-xl font-semibold text-neutral-900">Фото товара</h2>
+        <h2 className="text-xl font-semibold text-neutral-900">
+          {lang === "ru" ? "Фото товара" : lang === "tr" ? "Ürün fotoğrafı" : "Product photo"}
+        </h2>
         <p className="mt-2 text-sm text-neutral-600">
-          Сделай фото или загрузи изображение. Можно добавить название или бренд.
+          {lang === "ru"
+            ? "Сделай фото или загрузи изображение. Можно добавить название или бренд."
+            : lang === "tr"
+            ? "Fotoğraf çek ya da görsel yükle. İstersen marka/isim ekle."
+            : "Take a photo or upload an image. You can add name or brand."}
         </p>
 
         <div className="mt-4 rounded-2xl border border-dashed border-neutral-300 bg-neutral-50 p-4">
@@ -99,16 +111,30 @@ export default function ScanForm() {
         </div>
 
         <div className="mt-4 rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-xs text-neutral-600">
-          Подсказка для OCR: сфокусируй камеру на составе, избегай бликов и делай фото поближе.
+          {lang === "ru"
+            ? "Подсказка для OCR: сфокусируй камеру на составе, избегай бликов и делай фото поближе."
+            : lang === "tr"
+            ? "OCR ipucu: içerik kısmına odaklan, yansımadan kaçın ve yakından çek."
+            : "OCR tip: focus on ingredients, avoid glare, and shoot closer."}
         </div>
 
         <label className="mt-4 block text-sm font-medium text-neutral-700">
-          Название / бренд (необязательно)
+          {lang === "ru"
+            ? "Название / бренд (необязательно)"
+            : lang === "tr"
+            ? "Ürün adı / marka (opsiyonel)"
+            : "Name / brand (optional)"}
         </label>
         <input
           value={userText}
           onChange={(event) => setUserText(event.target.value)}
-          placeholder="Например: Coca-Cola Zero 0.5L"
+          placeholder={
+            lang === "ru"
+              ? "Например: Coca-Cola Zero 0.5L"
+              : lang === "tr"
+              ? "Örn: Coca-Cola Zero 0.5L"
+              : "e.g., Coca-Cola Zero 0.5L"
+          }
           className="mt-2 w-full rounded-2xl border border-neutral-200 bg-white px-4 py-3 text-sm outline-none focus:border-neutral-400"
         />
 
@@ -119,7 +145,11 @@ export default function ScanForm() {
             onChange={(event) => setEnhance(event.target.checked)}
             className="h-4 w-4 rounded border-neutral-300"
           />
-          Улучшить читаемость состава (контраст)
+          {lang === "ru"
+            ? "Улучшить читаемость состава (контраст)"
+            : lang === "tr"
+            ? "Okunabilirliği artır (kontrast)"
+            : "Improve readability (contrast)"}
         </label>
 
         <button
@@ -128,13 +158,27 @@ export default function ScanForm() {
           disabled={!canSubmit}
           className="tap-feedback mt-6 w-full rounded-2xl bg-neutral-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-400"
         >
-          {loading ? "Анализирую..." : "Анализировать"}
+          {loading
+            ? lang === "ru"
+              ? "Анализирую..."
+              : lang === "tr"
+              ? "Analiz ediliyor..."
+              : "Analyzing..."
+            : lang === "ru"
+            ? "Анализировать"
+            : lang === "tr"
+            ? "Analiz et"
+            : "Analyze"}
         </button>
 
         {error && <p className="mt-4 text-sm text-rose-600">{error}</p>}
         {saved && (
           <p className="mt-4 text-sm text-emerald-700">
-            Сохранено в историю{savedId ? ` (#${savedId.slice(0, 6)})` : ""}.
+            {lang === "ru"
+              ? `Сохранено в историю${savedId ? ` (#${savedId.slice(0, 6)})` : ""}.`
+              : lang === "tr"
+              ? `Geçmişe kaydedildi${savedId ? ` (#${savedId.slice(0, 6)})` : ""}.`
+              : `Saved to history${savedId ? ` (#${savedId.slice(0, 6)})` : ""}.`}
           </p>
         )}
       </div>
@@ -148,12 +192,26 @@ export default function ScanForm() {
               onClick={handleSave}
               className="tap-feedback w-full rounded-2xl border border-neutral-900 px-4 py-3 text-sm font-semibold text-neutral-900 transition hover:bg-neutral-900 hover:text-white"
             >
-              {saved ? "Сохранено" : "Сохранить в историю"}
+              {saved
+                ? lang === "ru"
+                  ? "Сохранено"
+                  : lang === "tr"
+                  ? "Kaydedildi"
+                  : "Saved"
+                : lang === "ru"
+                ? "Сохранить в историю"
+                : lang === "tr"
+                ? "Geçmişe kaydet"
+                : "Save to history"}
             </button>
           </div>
         ) : (
           <div className="flex h-full items-center justify-center rounded-3xl border border-dashed border-neutral-200 bg-white/60 p-12 text-center text-sm text-neutral-500">
-            Результат анализа появится здесь.
+            {lang === "ru"
+              ? "Результат анализа появится здесь."
+              : lang === "tr"
+              ? "Analiz sonucu burada görünecek."
+              : "Analysis result will appear here."}
           </div>
         )}
       </div>
