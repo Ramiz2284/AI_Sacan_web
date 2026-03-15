@@ -123,7 +123,7 @@ ${params.externalIngredients ?? ""}
 external_sources:
 ${sourcesText}
 
-Выход строго JSON, без markdown и без обертки в ```:
+Выход строго JSON, без markdown и без обертки в кодовый блок:
 {
   "product_name": "",
   "brand": "",
