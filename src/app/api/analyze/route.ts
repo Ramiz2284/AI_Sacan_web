@@ -66,10 +66,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Empty model response" }, { status: 502 });
     }
 
-    let parsed: ProductAnalysis | null = null;
-    try {
-      parsed = JSON.parse(outputText) as ProductAnalysis;
-    } catch {
+    const parsed = parseModelJson(outputText);
+    if (!parsed) {
       return NextResponse.json(
         { error: "Model output is not valid JSON", raw: outputText },
         { status: 502 }
@@ -125,7 +123,7 @@ ${params.externalIngredients ?? ""}
 external_sources:
 ${sourcesText}
 
-Выход строго JSON:
+Выход строго JSON, без markdown и без обертки в ```:
 {
   "product_name": "",
   "brand": "",
@@ -140,6 +138,33 @@ ${sourcesText}
 }
 
 Текст пользователя: ${params.userText || "(нет)"}`;
+}
+
+function parseModelJson(text: string): ProductAnalysis | null {
+  if (!text) return null;
+  let cleaned = text.trim();
+  cleaned = cleaned.replace(/^```json\s*/i, "");
+  cleaned = cleaned.replace(/^```\s*/i, "");
+  cleaned = cleaned.replace(/```$/i, "");
+  cleaned = cleaned.replace(/```$/m, "");
+  if (cleaned.toLowerCase().startsWith("json")) {
+    cleaned = cleaned.replace(/^json\s*/i, "");
+  }
+  try {
+    return JSON.parse(cleaned) as ProductAnalysis;
+  } catch {
+    const start = cleaned.indexOf("{");
+    const end = cleaned.lastIndexOf("}");
+    if (start !== -1 && end !== -1 && end > start) {
+      const slice = cleaned.slice(start, end + 1);
+      try {
+        return JSON.parse(slice) as ProductAnalysis;
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }
 }
 
 async function getExternalIngredients(userText: string): Promise<{
