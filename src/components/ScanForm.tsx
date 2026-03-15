@@ -165,11 +165,10 @@ export default function ScanForm() {
             {lang === "ru" ? "Сканировать" : lang === "tr" ? "Tara" : "Scan"}
           </button>
           {previewUrl && (
-            <img
-              src={previewUrl}
-              alt="Предпросмотр"
-              className="mt-4 h-56 w-full rounded-xl object-cover"
-            />
+            <div className="relative mt-4 h-56 w-full overflow-hidden rounded-xl">
+              <img src={previewUrl} alt="Предпросмотр" className="h-full w-full object-cover" />
+              <div className="pointer-events-none absolute inset-3 rounded-xl border-2 border-white/80" />
+            </div>
           )}
         </div>
 
@@ -259,12 +258,13 @@ async function fileToDataUrl(file: File, enhance: boolean): Promise<string> {
   }
 
   const rawDataUrl = await readAsDataUrl(file);
+  const cropped = await cropToSquare(rawDataUrl);
   if (!enhance) {
-    return downscaleIfNeeded(rawDataUrl);
+    return downscaleIfNeeded(cropped);
   }
 
   try {
-    const image = await loadImage(rawDataUrl);
+    const image = await loadImage(cropped);
     const { width, height } = getTargetSize(image.width, image.height, 1280);
     const canvas = document.createElement("canvas");
     canvas.width = width;
@@ -275,7 +275,7 @@ async function fileToDataUrl(file: File, enhance: boolean): Promise<string> {
     ctx.drawImage(image, 0, 0, width, height);
     return canvas.toDataURL("image/jpeg", 0.92);
   } catch {
-    return downscaleIfNeeded(rawDataUrl);
+    return downscaleIfNeeded(cropped);
   }
 }
 
@@ -309,6 +309,24 @@ async function downscaleIfNeeded(dataUrl: string): Promise<string> {
     if (!ctx) return dataUrl;
     ctx.drawImage(image, 0, 0, width, height);
     return canvas.toDataURL("image/jpeg", 0.9);
+  } catch {
+    return dataUrl;
+  }
+}
+
+async function cropToSquare(dataUrl: string): Promise<string> {
+  try {
+    const image = await loadImage(dataUrl);
+    const size = Math.min(image.width, image.height);
+    const sx = Math.max(0, Math.floor((image.width - size) / 2));
+    const sy = Math.max(0, Math.floor((image.height - size) / 2));
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return dataUrl;
+    ctx.drawImage(image, sx, sy, size, size, 0, 0, size, size);
+    return canvas.toDataURL("image/jpeg", 0.92);
   } catch {
     return dataUrl;
   }
