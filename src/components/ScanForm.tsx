@@ -11,6 +11,10 @@ const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/heic", "
 export default function ScanForm() {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [cameraOn, setCameraOn] = useState(false);
+  const [captured, setCaptured] = useState(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const [result, setResult] = useState<ProductAnalysis | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,6 +26,10 @@ export default function ScanForm() {
 
   useEffect(() => {
     setLang(getStoredLang());
+  }, []);
+
+  useEffect(() => {
+    return () => stopCamera();
   }, []);
 
   function handleFileChange(next: File | null) {
@@ -77,6 +85,92 @@ export default function ScanForm() {
     const record = saveToHistory(result);
     setSaved(true);
     setSavedId(record.id);
+  }
+
+  async function startCamera() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+        audio: false,
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+      setCameraOn(true);
+      setCaptured(false);
+    } catch {
+      setError(
+        lang === "ru"
+          ? "Не удалось открыть камеру. Разрешите доступ в настройках браузера."
+          : lang === "tr"
+          ? "Kamera açılamadı. Tarayıcı ayarlarından izin verin."
+          : "Unable to access camera. Please allow permission."
+      );
+    }
+  }
+
+  function stopCamera() {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    setCameraOn(false);
+  }
+
+  async function capturePhoto() {
+    if (!videoRef.current) return;
+    const video = videoRef.current;
+    const canvas = document.createElement("canvas");
+    const size = Math.min(video.videoWidth, video.videoHeight);
+    const sx = Math.max(0, Math.floor((video.videoWidth - size) / 2));
+    const sy = Math.max(0, Math.floor((video.videoHeight - size) / 2));
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.drawImage(video, sx, sy, size, size, 0, 0, size, size);
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
+    setPreviewUrl(dataUrl);
+    setCaptured(true);
+  }
+
+  async function analyzeCaptured() {
+    if (!previewUrl) return;
+    setLoading(true);
+    setError(null);
+    setSaved(false);
+    try {
+      const base64 = await fileToDataUrlFromDataUrl(previewUrl, enhance);
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 45000);
+      const response = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageDataUrl: base64, userText: "" }),
+        signal: controller.signal,
+      });
+      window.clearTimeout(timeout);
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || "Не удалось получить ответ.");
+      }
+      const data = (await response.json()) as ProductAnalysis;
+      setResult(data);
+      stopCamera();
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") {
+        setError("Запрос слишком долгий. Попробуйте ещё раз или уменьшите фото.");
+      } else {
+        setError(err instanceof Error ? err.message : "Ошибка анализа.");
+      }
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -153,18 +247,90 @@ export default function ScanForm() {
             ref={fileInputRef}
             type="file"
             accept="image/*"
-            capture="environment"
             className="hidden"
             onChange={(event) => handleFileChange(event.target.files?.[0] ?? null)}
           />
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="tap-feedback w-full rounded-full bg-neutral-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-neutral-800"
-          >
-            {lang === "ru" ? "Сканировать" : lang === "tr" ? "Tara" : "Scan"}
-          </button>
-          {previewUrl && (
+
+          {!cameraOn && (
+            <div className="space-y-3">
+              <button
+                type="button"
+                onClick={startCamera}
+                className="tap-feedback w-full rounded-full bg-neutral-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-neutral-800"
+              >
+                {lang === "ru" ? "Сканировать" : lang === "tr" ? "Tara" : "Scan"}
+              </button>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="tap-feedback w-full rounded-full border border-neutral-900 px-4 py-3 text-sm font-semibold text-neutral-900 transition hover:bg-neutral-900 hover:text-white"
+              >
+                {lang === "ru"
+                  ? "Выбрать из галереи"
+                  : lang === "tr"
+                  ? "Galeriden seç"
+                  : "Choose from gallery"}
+              </button>
+            </div>
+          )}
+
+          {cameraOn && (
+            <div className="relative mt-3 overflow-hidden rounded-xl bg-black">
+              {!captured ? (
+                <>
+                  <video ref={videoRef} className="h-72 w-full object-cover" playsInline />
+                  <div className="pointer-events-none absolute inset-4 rounded-2xl border-2 border-white/70" />
+                  <div className="mt-4 flex gap-3">
+                    <button
+                      type="button"
+                      onClick={capturePhoto}
+                      className="tap-feedback flex-1 rounded-full bg-neutral-900 px-4 py-3 text-sm font-semibold text-white"
+                    >
+                      {lang === "ru" ? "Сделать фото" : lang === "tr" ? "Foto çek" : "Capture"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={stopCamera}
+                      className="tap-feedback flex-1 rounded-full border border-white/40 px-4 py-3 text-sm font-semibold text-white"
+                    >
+                      {lang === "ru" ? "Отмена" : lang === "tr" ? "İptal" : "Cancel"}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {previewUrl && (
+                    <div className="relative">
+                      <img src={previewUrl} alt="Предпросмотр" className="h-72 w-full object-cover" />
+                      <div className="pointer-events-none absolute inset-4 rounded-2xl border-2 border-white/70" />
+                    </div>
+                  )}
+                  <div className="mt-4 flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setCaptured(false)}
+                      className="tap-feedback flex-1 rounded-full border border-white/40 px-4 py-3 text-sm font-semibold text-white"
+                    >
+                      {lang === "ru" ? "Переснять" : lang === "tr" ? "Yeniden çek" : "Retake"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={analyzeCaptured}
+                      className="tap-feedback flex-1 rounded-full bg-sky-500 px-4 py-3 text-sm font-semibold text-white"
+                    >
+                      {lang === "ru"
+                        ? "Анализировать"
+                        : lang === "tr"
+                        ? "Analiz et"
+                        : "Analyze"}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {!cameraOn && previewUrl && (
             <div className="relative mt-4 h-56 w-full overflow-hidden rounded-xl">
               <img src={previewUrl} alt="Предпросмотр" className="h-full w-full object-cover" />
               <div className="pointer-events-none absolute inset-3 rounded-xl border-2 border-white/80" />
@@ -271,6 +437,26 @@ async function fileToDataUrl(file: File, enhance: boolean): Promise<string> {
     canvas.height = height;
     const ctx = canvas.getContext("2d");
     if (!ctx) return rawDataUrl;
+    ctx.filter = "contrast(140%) saturate(115%)";
+    ctx.drawImage(image, 0, 0, width, height);
+    return canvas.toDataURL("image/jpeg", 0.92);
+  } catch {
+    return downscaleIfNeeded(cropped);
+  }
+}
+
+async function fileToDataUrlFromDataUrl(dataUrl: string, enhance: boolean): Promise<string> {
+  const cropped = await cropToSquare(dataUrl);
+  if (!enhance) return downscaleIfNeeded(cropped);
+
+  try {
+    const image = await loadImage(cropped);
+    const { width, height } = getTargetSize(image.width, image.height, 1280);
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return cropped;
     ctx.filter = "contrast(140%) saturate(115%)";
     ctx.drawImage(image, 0, 0, width, height);
     return canvas.toDataURL("image/jpeg", 0.92);
