@@ -53,6 +53,7 @@ export async function POST(request: Request) {
             {
               type: "input_image",
               image_url: body.imageDataUrl,
+              detail: "auto",
             },
           ],
         },
