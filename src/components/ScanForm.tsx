@@ -304,15 +304,7 @@ export default function ScanForm() {
                 aria-label={lang === "ru" ? "Сканировать" : lang === "tr" ? "Tara" : "Scan"}
                 title={lang === "ru" ? "Сканировать" : lang === "tr" ? "Tara" : "Scan"}
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path
-                    d="M4 7V5a1 1 0 0 1 1-1h2M20 7V5a1 1 0 0 0-1-1h-2M4 17v2a1 1 0 0 0 1 1h2M20 17v2a1 1 0 0 1-1 1h-2"
-                    stroke="currentColor"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                  />
-                  <rect x="7" y="8" width="10" height="8" rx="2" stroke="currentColor" strokeWidth="1.6" />
-                </svg>
+                {lang === "ru" ? "Сканировать" : lang === "tr" ? "Tara" : "Scan"}
               </button>
               <button
                 type="button"
@@ -333,11 +325,11 @@ export default function ScanForm() {
                     : "Choose from gallery"
                 }
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M4 6h16v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6z" stroke="currentColor" strokeWidth="1.6" />
-                  <circle cx="9" cy="10" r="1.5" fill="currentColor" />
-                  <path d="M4 16l4-4 4 4 3-3 5 5" stroke="currentColor" strokeWidth="1.6" />
-                </svg>
+                {lang === "ru"
+                  ? "Выбрать из галереи"
+                  : lang === "tr"
+                  ? "Galeriden seç"
+                  : "Choose from gallery"}
               </button>
             </div>
           )}
@@ -362,14 +354,7 @@ export default function ScanForm() {
                       aria-label={lang === "ru" ? "Сделать фото" : lang === "tr" ? "Foto çek" : "Capture"}
                       title={lang === "ru" ? "Сделать фото" : lang === "tr" ? "Foto çek" : "Capture"}
                     >
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <path
-                          d="M4 7h3l2-2h6l2 2h3a1 1 0 0 1 1 1v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a1 1 0 0 1 1-1z"
-                          stroke="currentColor"
-                          strokeWidth="1.6"
-                        />
-                        <circle cx="12" cy="13" r="3.5" stroke="currentColor" strokeWidth="1.6" />
-                      </svg>
+                      {lang === "ru" ? "Сделать фото" : lang === "tr" ? "Foto çek" : "Capture"}
                     </button>
                     <button
                       type="button"
@@ -378,9 +363,7 @@ export default function ScanForm() {
                       aria-label={lang === "ru" ? "Отмена" : lang === "tr" ? "İptal" : "Cancel"}
                       title={lang === "ru" ? "Отмена" : lang === "tr" ? "İptal" : "Cancel"}
                     >
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <path d="M6 6l12 12M18 6l-12 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                      </svg>
+                      {lang === "ru" ? "Отмена" : lang === "tr" ? "İptal" : "Cancel"}
                     </button>
                   </div>
                 </>
@@ -400,10 +383,7 @@ export default function ScanForm() {
                       aria-label={lang === "ru" ? "Переснять" : lang === "tr" ? "Yeniden çek" : "Retake"}
                       title={lang === "ru" ? "Переснять" : lang === "tr" ? "Yeniden çek" : "Retake"}
                     >
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <path d="M7 7h4v-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                        <path d="M7 7a7 7 0 1 1-1 9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-                      </svg>
+                      {lang === "ru" ? "Переснять" : lang === "tr" ? "Yeniden çek" : "Retake"}
                     </button>
                     <button
                       type="button"
