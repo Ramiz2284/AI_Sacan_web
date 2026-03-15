@@ -39,11 +39,15 @@ export default function ScanForm() {
     setSaved(false);
     try {
       const base64 = await fileToDataUrl(file, enhance);
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 45000);
       const response = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ imageDataUrl: base64, userText }),
+        signal: controller.signal,
       });
+      window.clearTimeout(timeout);
       if (!response.ok) {
         const text = await response.text();
         throw new Error(text || "Не удалось получить ответ.");
@@ -51,7 +55,11 @@ export default function ScanForm() {
       const data = (await response.json()) as ProductAnalysis;
       setResult(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Ошибка анализа.");
+      if (err instanceof DOMException && err.name === "AbortError") {
+        setError("Запрос слишком долгий. Попробуйте ещё раз или уменьшите фото.");
+      } else {
+        setError(err instanceof Error ? err.message : "Ошибка анализа.");
+      }
     } finally {
       setLoading(false);
     }
@@ -153,20 +161,23 @@ async function fileToDataUrl(file: File, enhance: boolean): Promise<string> {
   }
 
   const rawDataUrl = await readAsDataUrl(file);
-  if (!enhance) return rawDataUrl;
+  if (!enhance) {
+    return downscaleIfNeeded(rawDataUrl);
+  }
 
   try {
     const image = await loadImage(rawDataUrl);
+    const { width, height } = getTargetSize(image.width, image.height, 1280);
     const canvas = document.createElement("canvas");
-    canvas.width = image.width;
-    canvas.height = image.height;
+    canvas.width = width;
+    canvas.height = height;
     const ctx = canvas.getContext("2d");
     if (!ctx) return rawDataUrl;
     ctx.filter = "contrast(140%) saturate(115%)";
-    ctx.drawImage(image, 0, 0);
+    ctx.drawImage(image, 0, 0, width, height);
     return canvas.toDataURL("image/jpeg", 0.92);
   } catch {
-    return rawDataUrl;
+    return downscaleIfNeeded(rawDataUrl);
   }
 }
 
@@ -186,4 +197,28 @@ function loadImage(src: string): Promise<HTMLImageElement> {
     img.onerror = () => reject(new Error("Не удалось загрузить изображение."));
     img.src = src;
   });
+}
+
+async function downscaleIfNeeded(dataUrl: string): Promise<string> {
+  try {
+    const image = await loadImage(dataUrl);
+    const { width, height } = getTargetSize(image.width, image.height, 1280);
+    if (width === image.width && height === image.height) return dataUrl;
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return dataUrl;
+    ctx.drawImage(image, 0, 0, width, height);
+    return canvas.toDataURL("image/jpeg", 0.9);
+  } catch {
+    return dataUrl;
+  }
+}
+
+function getTargetSize(width: number, height: number, maxSize: number) {
+  const maxDim = Math.max(width, height);
+  if (maxDim <= maxSize) return { width, height };
+  const scale = maxSize / maxDim;
+  return { width: Math.round(width * scale), height: Math.round(height * scale) };
 }
