@@ -81,6 +81,61 @@ export default function ScanForm() {
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr,1.2fr]">
+      {loading && (
+        <div className="scan-overlay">
+          <div className="scan-panel">
+            <div className="relative mx-auto mb-6 h-40 w-40">
+              <div className="scan-glow" />
+              <div className="scan-orbit" />
+              <div className="scan-orbit second" />
+              <svg
+                viewBox="0 0 200 200"
+                className="relative z-10 h-full w-full"
+                aria-hidden="true"
+              >
+                <defs>
+                  <linearGradient id="brain" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stopColor="#7dd3fc" />
+                    <stop offset="100%" stopColor="#38bdf8" />
+                  </linearGradient>
+                </defs>
+                <path
+                  d="M62 60c-10 2-18 10-20 20-10 2-18 12-18 24 0 14 10 26 24 28 2 10 12 18 24 18h18c10 0 18-8 18-18V90c0-18-14-34-32-34-4 0-8 1-14 4z"
+                  fill="url(#brain)"
+                  opacity="0.9"
+                />
+                <path
+                  d="M138 60c10 2 18 10 20 20 10 2 18 12 18 24 0 14-10 26-24 28-2 10-12 18-24 18h-18c-10 0-18-8-18-18V90c0-18 14-34 32-34 4 0 8 1 14 4z"
+                  fill="url(#brain)"
+                  opacity="0.9"
+                />
+                <path
+                  d="M70 90h20m-10 16h22m-18 16h20m20-32h20m-10 16h22m-18 16h20"
+                  stroke="white"
+                  strokeOpacity="0.6"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </div>
+            <div className="scan-wave" />
+            <p className="mt-4 text-sm uppercase tracking-[0.3em] text-sky-200">
+              {lang === "ru"
+                ? "Сканирую"
+                : lang === "tr"
+                ? "Taranıyor"
+                : "Scanning"}
+            </p>
+            <p className="mt-2 text-sm text-slate-200">
+              {lang === "ru"
+                ? "Ищу состав и отзывы…"
+                : lang === "tr"
+                ? "İçerik ve yorumlar aranıyor…"
+                : "Finding ingredients and reviews…"}
+            </p>
+          </div>
+        </div>
+      )}
       <div className="rounded-3xl border border-black/10 bg-white/70 p-6 shadow-[0_20px_60px_-40px_rgba(0,0,0,0.5)]">
         <h2 className="text-xl font-semibold text-neutral-900">
           {lang === "ru" ? "Фото товара" : lang === "tr" ? "Ürün fotoğrafı" : "Product photo"}
