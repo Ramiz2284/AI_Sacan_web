@@ -27,14 +27,21 @@ export async function POST(request: Request) {
 
     const { externalIngredients, externalSources } = await getExternalIngredients(userText);
 
+    const model = process.env.OPENAI_MODEL || "gpt-4.1-mini";
+
+    const productHint = await detectProduct({
+      model,
+      imageDataUrl: body.imageDataUrl,
+      userText,
+    });
+
     const prompt = buildPrompt({
       watchlist: WATCHLIST_ADDITIVES,
       userText,
       externalIngredients,
       externalSources,
+      productHint,
     });
-
-    const model = process.env.OPENAI_MODEL || "gpt-4.1-mini";
 
     const response = await openai.responses.create({
       model,
@@ -49,12 +56,13 @@ export async function POST(request: Request) {
           content: [
             {
               type: "input_text",
-              text: userText || "Опиши этот товар и состав.",
+              text:
+                "Найди отзывы через web_search и сформируй итоговый JSON по схеме. Если отзывов нет, так и укажи.",
             },
             {
               type: "input_image",
               image_url: body.imageDataUrl,
-              detail: "auto",
+              detail: "high",
             },
           ],
         },
@@ -87,11 +95,16 @@ function buildPrompt(params: {
   userText: string;
   externalIngredients: string | null;
   externalSources: Source[];
+  productHint: { product_name: string; brand: string; category: string } | null;
 }) {
   const watchlist = params.watchlist.map((item) => `- ${item}`).join("\n");
   const sourcesText = params.externalSources
     .map((source) => `- ${source.title} | ${source.url} | ${source.type}`)
     .join("\n");
+
+  const hintText = params.productHint
+    ? `product_name: ${params.productHint.product_name}\nbrand: ${params.productHint.brand}\ncategory: ${params.productHint.category}\n`
+    : "";
 
   return `Ты — ассистент анализа товаров по фото.
 
@@ -125,6 +138,9 @@ ${params.externalIngredients ?? ""}
 external_sources:
 ${sourcesText}
 
+product_hint:
+${hintText}
+
 Выход строго JSON, без markdown и без обертки в кодовый блок:
 {
   "product_name": "",
@@ -140,6 +156,49 @@ ${sourcesText}
 }
 
 Текст пользователя: ${params.userText || "(нет)"}`;
+}
+
+async function detectProduct(params: {
+  model: string;
+  imageDataUrl: string;
+  userText: string;
+}): Promise<{ product_name: string; brand: string; category: string } | null> {
+  const response = await openai.responses.create({
+    model: params.model,
+    input: [
+      {
+        role: "system",
+        content:
+          "Определи товар по фото. Верни ТОЛЬКО JSON без markdown: {\"product_name\":\"\",\"brand\":\"\",\"category\":\"\"}",
+      },
+      {
+        role: "user",
+        content: [
+          {
+            type: "input_text",
+            text: params.userText || "Определи товар на фото.",
+          },
+          {
+            type: "input_image",
+            image_url: params.imageDataUrl,
+            detail: "high",
+          },
+        ],
+      },
+    ],
+    temperature: 0.1,
+  });
+  const text = response.output_text;
+  if (!text) return null;
+  const parsed = parseModelJson(text) as
+    | { product_name?: string; brand?: string; category?: string }
+    | null;
+  if (!parsed) return null;
+  return {
+    product_name: parsed.product_name ?? "",
+    brand: parsed.brand ?? "",
+    category: parsed.category ?? "",
+  };
 }
 
 function parseModelJson(text: string): ProductAnalysis | null {
