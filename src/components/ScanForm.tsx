@@ -354,7 +354,22 @@ export default function ScanForm() {
                       aria-label={lang === "ru" ? "Сделать фото" : lang === "tr" ? "Foto çek" : "Capture"}
                       title={lang === "ru" ? "Сделать фото" : lang === "tr" ? "Foto çek" : "Capture"}
                     >
-                      {lang === "ru" ? "Сделать фото" : lang === "tr" ? "Foto çek" : "Capture"}
+                      <span className="flex items-center justify-center gap-2">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                          <path
+                            d="M4 7h3l2-2h6l2 2h3a1 1 0 0 1 1 1v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a1 1 0 0 1 1-1z"
+                            stroke="currentColor"
+                            strokeWidth="1.6"
+                          />
+                          <circle cx="12" cy="13" r="3.5" stroke="currentColor" strokeWidth="1.6" />
+                        </svg>
+                        <span className="hidden sm:inline">
+                          {lang === "ru" ? "Сделать фото" : lang === "tr" ? "Foto çek" : "Capture"}
+                        </span>
+                        <span className="sm:hidden">
+                          {lang === "ru" ? "Фото" : lang === "tr" ? "Foto" : "Photo"}
+                        </span>
+                      </span>
                     </button>
                     <button
                       type="button"
@@ -363,7 +378,17 @@ export default function ScanForm() {
                       aria-label={lang === "ru" ? "Отмена" : lang === "tr" ? "İptal" : "Cancel"}
                       title={lang === "ru" ? "Отмена" : lang === "tr" ? "İptal" : "Cancel"}
                     >
-                      {lang === "ru" ? "Отмена" : lang === "tr" ? "İptal" : "Cancel"}
+                      <span className="flex items-center justify-center gap-2">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                          <path d="M6 6l12 12M18 6l-12 12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                        </svg>
+                        <span className="hidden sm:inline">
+                          {lang === "ru" ? "Отмена" : lang === "tr" ? "İptal" : "Cancel"}
+                        </span>
+                        <span className="sm:hidden">
+                          {lang === "ru" ? "Отм." : lang === "tr" ? "İpt." : "Cancel"}
+                        </span>
+                      </span>
                     </button>
                   </div>
                 </>
