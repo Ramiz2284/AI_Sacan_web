@@ -7,5 +7,18 @@ export function isAppLang(value: string | null): value is AppLang {
 export function getStoredLang(): AppLang {
   if (typeof window === "undefined") return "ru";
   const stored = window.localStorage.getItem("aiscan_lang");
-  return isAppLang(stored) ? stored : "ru";
+  if (isAppLang(stored)) return stored;
+
+  const device = getDeviceLang();
+  window.localStorage.setItem("aiscan_lang", device);
+  return device;
+}
+
+function getDeviceLang(): AppLang {
+  if (typeof navigator === "undefined") return "ru";
+  const raw = navigator.language?.toLowerCase() ?? "";
+  if (raw.startsWith("ru")) return "ru";
+  if (raw.startsWith("tr")) return "tr";
+  if (raw.startsWith("en")) return "en";
+  return "en";
 }
