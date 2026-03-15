@@ -95,9 +95,18 @@ export default function ScanForm() {
       });
       streamRef.current = stream;
       if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.onloadedmetadata = () => {
-          void videoRef.current?.play();
+        const video = videoRef.current;
+        video.srcObject = stream;
+        video.muted = true;
+        video.autoplay = true;
+        video.playsInline = true;
+        video.setAttribute("playsinline", "true");
+        video.setAttribute("webkit-playsinline", "true");
+        video.onloadedmetadata = () => {
+          void video.play();
+        };
+        video.onloadeddata = () => {
+          void video.play();
         };
       }
       setCameraOn(true);
@@ -119,6 +128,7 @@ export default function ScanForm() {
       streamRef.current = null;
     }
     if (videoRef.current) {
+      videoRef.current.pause();
       videoRef.current.srcObject = null;
     }
     setCameraOn(false);
