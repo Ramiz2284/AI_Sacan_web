@@ -150,9 +150,9 @@ export default function HomePage() {
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 href="/scan"
-                className="rounded-full bg-neutral-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-neutral-800"
+                className="rounded-full bg-neutral-900 px-6 py-3 text-sm font-semibold text-white shadow-[0_12px_30px_-20px_rgba(0,0,0,0.7)] transition hover:bg-neutral-800"
               >
-                {copy.scan}
+                <span className="text-white">{copy.scan}</span>
               </Link>
               <Link
                 href="/history"
