@@ -61,6 +61,16 @@ export default function BottomNav() {
 
   useEffect(() => {
     setLang(getStoredLang());
+    const handleLangChange = (event: Event) => {
+      const detail = (event as CustomEvent<string>).detail;
+      if (detail === "ru" || detail === "tr" || detail === "en") {
+        setLang(detail);
+      } else {
+        setLang(getStoredLang());
+      }
+    };
+    window.addEventListener("aiscan_lang_change", handleLangChange);
+    return () => window.removeEventListener("aiscan_lang_change", handleLangChange);
   }, []);
 
   return (

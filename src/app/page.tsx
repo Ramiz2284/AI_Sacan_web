@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import BottomNav from "@/components/BottomNav";
+import { setStoredLang } from "@/lib/i18n";
 
 type HomeLang = "ru" | "tr" | "en";
 
@@ -100,7 +101,7 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    window.localStorage.setItem("aiscan_lang", lang);
+    setStoredLang(lang);
   }, [lang]);
 
   const copy = useMemo(() => COPY[lang], [lang]);

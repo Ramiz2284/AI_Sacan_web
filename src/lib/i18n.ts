@@ -14,6 +14,12 @@ export function getStoredLang(): AppLang {
   return device;
 }
 
+export function setStoredLang(lang: AppLang) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem("aiscan_lang", lang);
+  window.dispatchEvent(new CustomEvent("aiscan_lang_change", { detail: lang }));
+}
+
 function getDeviceLang(): AppLang {
   if (typeof navigator === "undefined") return "ru";
   const raw = navigator.language?.toLowerCase() ?? "";
