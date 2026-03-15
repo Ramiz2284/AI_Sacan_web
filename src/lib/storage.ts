@@ -34,6 +34,13 @@ export function clearHistory() {
   window.localStorage.removeItem(STORAGE_KEY);
 }
 
+export function removeFromHistory(id: string) {
+  if (typeof window === "undefined") return;
+  const current = getHistory();
+  const next = current.filter((item) => item.id !== id);
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+}
+
 export function exportHistory() {
   const data = JSON.stringify(getHistory(), null, 2);
   const blob = new Blob([data], { type: "application/json" });

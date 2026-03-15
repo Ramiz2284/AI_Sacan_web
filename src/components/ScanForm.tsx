@@ -15,6 +15,7 @@ export default function ScanForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [savedId, setSavedId] = useState<string | null>(null);
   const [enhance, setEnhance] = useState(true);
 
   const canSubmit = useMemo(() => !!file && !loading, [file, loading]);
@@ -67,8 +68,9 @@ export default function ScanForm() {
 
   function handleSave() {
     if (!result) return;
-    saveToHistory(result);
+    const record = saveToHistory(result);
     setSaved(true);
+    setSavedId(record.id);
   }
 
   return (
@@ -130,7 +132,11 @@ export default function ScanForm() {
         </button>
 
         {error && <p className="mt-4 text-sm text-rose-600">{error}</p>}
-        {saved && <p className="mt-4 text-sm text-emerald-700">Сохранено в историю.</p>}
+        {saved && (
+          <p className="mt-4 text-sm text-emerald-700">
+            Сохранено в историю{savedId ? ` (#${savedId.slice(0, 6)})` : ""}.
+          </p>
+        )}
       </div>
 
       <div>
@@ -142,7 +148,7 @@ export default function ScanForm() {
               onClick={handleSave}
               className="w-full rounded-2xl border border-neutral-900 px-4 py-3 text-sm font-semibold text-neutral-900 transition hover:bg-neutral-900 hover:text-white"
             >
-              Сохранить в историю
+              {saved ? "Сохранено" : "Сохранить в историю"}
             </button>
           </div>
         ) : (

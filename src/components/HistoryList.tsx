@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { HistoryRecord } from "@/lib/types";
-import { exportHistory, getHistory, importHistory } from "@/lib/storage";
+import { clearHistory, exportHistory, getHistory, importHistory, removeFromHistory } from "@/lib/storage";
 
 function groupByCategory(items: HistoryRecord[]) {
   return items.reduce<Record<string, HistoryRecord[]>>((acc, item) => {
@@ -17,6 +17,7 @@ export default function HistoryList() {
   const [items, setItems] = useState<HistoryRecord[]>([]);
   const [query, setQuery] = useState("");
   const [importMessage, setImportMessage] = useState<string | null>(null);
+  const [clearMessage, setClearMessage] = useState<string | null>(null);
 
   useEffect(() => {
     setItems(getHistory());
@@ -41,6 +42,18 @@ export default function HistoryList() {
     const result = importHistory(text);
     setItems(getHistory());
     setImportMessage(`Импортировано: ${result.added}, всего записей: ${result.total}.`);
+    setClearMessage(null);
+  }
+
+  function handleRemove(id: string) {
+    removeFromHistory(id);
+    setItems(getHistory());
+  }
+
+  function handleClearAll() {
+    clearHistory();
+    setItems([]);
+    setClearMessage("История очищена.");
   }
 
   return (
@@ -59,6 +72,13 @@ export default function HistoryList() {
             className="rounded-full border border-neutral-900 px-4 py-2 text-xs font-semibold text-neutral-900 transition hover:bg-neutral-900 hover:text-white"
           >
             Экспорт
+          </button>
+          <button
+            type="button"
+            onClick={handleClearAll}
+            className="rounded-full border border-rose-300 px-4 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-600 hover:text-white"
+          >
+            Очистить всё
           </button>
           <label className="rounded-full bg-neutral-900 px-4 py-2 text-xs font-semibold text-white hover:bg-neutral-800">
             Импорт
@@ -83,6 +103,9 @@ export default function HistoryList() {
 
       {importMessage && (
         <p className="mt-4 text-sm text-emerald-700">{importMessage}</p>
+      )}
+      {clearMessage && (
+        <p className="mt-4 text-sm text-rose-600">{clearMessage}</p>
       )}
 
       {filtered.length === 0 ? (
@@ -116,6 +139,13 @@ export default function HistoryList() {
                     <p className="mt-3 text-sm text-neutral-700">
                       {record.summary.ru || record.summary.en || "Сводка отсутствует."}
                     </p>
+                    <button
+                      type="button"
+                      onClick={() => handleRemove(record.id)}
+                      className="mt-4 text-xs font-semibold text-rose-600 hover:text-rose-700"
+                    >
+                      Удалить
+                    </button>
                   </article>
                 ))}
               </div>
