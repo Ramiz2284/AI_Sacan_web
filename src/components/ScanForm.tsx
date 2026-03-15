@@ -90,13 +90,15 @@ export default function ScanForm() {
   async function startCamera() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
+        video: { facingMode: { ideal: "environment" } },
         audio: false,
       });
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        await videoRef.current.play();
+        videoRef.current.onloadedmetadata = () => {
+          void videoRef.current?.play();
+        };
       }
       setCameraOn(true);
       setCaptured(false);
@@ -278,7 +280,13 @@ export default function ScanForm() {
             <div className="relative mt-3 overflow-hidden rounded-xl bg-black">
               {!captured ? (
                 <>
-                  <video ref={videoRef} className="h-72 w-full object-cover" playsInline />
+                  <video
+                    ref={videoRef}
+                    className="h-72 w-full object-cover"
+                    playsInline
+                    muted
+                    autoPlay
+                  />
                   <div className="pointer-events-none absolute inset-4 rounded-2xl border-2 border-white/70" />
                   <div className="mt-4 flex gap-3">
                     <button
