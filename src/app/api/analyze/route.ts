@@ -38,6 +38,7 @@ export async function POST(request: Request) {
 
     const response = await openai.responses.create({
       model,
+      tools: [{ type: "web_search" }],
       input: [
         {
           role: "system",
@@ -58,6 +59,85 @@ export async function POST(request: Request) {
           ],
         },
       ],
+      text: {
+        format: {
+          type: "json_schema",
+          json_schema: {
+            name: "product_scan",
+            strict: true,
+            schema: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                product_name: { type: "string" },
+                brand: { type: "string" },
+                category: { type: "string" },
+                ingredients_found: { type: "boolean" },
+                ingredients_text: { type: "string" },
+                watchlist_matches: { type: "array", items: { type: "string" } },
+                pros: {
+                  type: "object",
+                  additionalProperties: false,
+                  properties: {
+                    ru: { type: "array", items: { type: "string" } },
+                    tr: { type: "array", items: { type: "string" } },
+                    en: { type: "array", items: { type: "string" } },
+                  },
+                  required: ["ru", "tr", "en"],
+                },
+                cons: {
+                  type: "object",
+                  additionalProperties: false,
+                  properties: {
+                    ru: { type: "array", items: { type: "string" } },
+                    tr: { type: "array", items: { type: "string" } },
+                    en: { type: "array", items: { type: "string" } },
+                  },
+                  required: ["ru", "tr", "en"],
+                },
+                summary: {
+                  type: "object",
+                  additionalProperties: false,
+                  properties: {
+                    ru: { type: "string" },
+                    tr: { type: "string" },
+                    en: { type: "string" },
+                  },
+                  required: ["ru", "tr", "en"],
+                },
+                sources: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    additionalProperties: false,
+                    properties: {
+                      title: { type: "string" },
+                      url: { type: "string" },
+                      type: {
+                        type: "string",
+                        enum: ["manufacturer", "database", "retailer", "review"],
+                      },
+                    },
+                    required: ["title", "url", "type"],
+                  },
+                },
+              },
+              required: [
+                "product_name",
+                "brand",
+                "category",
+                "ingredients_found",
+                "ingredients_text",
+                "watchlist_matches",
+                "pros",
+                "cons",
+                "summary",
+                "sources",
+              ],
+            },
+          },
+        },
+      },
       temperature: 0.2,
     });
 
@@ -107,6 +187,7 @@ function buildPrompt(params: {
    - Если состава нет нигде — честно укажи “состав не найден”.
 3) Сверь состав с WATCHLIST_ADDITIVES и перечисли совпадения.
 4) Сформируй краткую выжимку отзывов: 3–5 плюсов и 3–5 минусов в стиле “люди отмечают…”, без выдуманных цитат.
+   Используй web_search для поиска отзывов и укажи источники в поле sources (type: review).
 5) Итог: 1–2 предложения резюме.
 
 Правила:
