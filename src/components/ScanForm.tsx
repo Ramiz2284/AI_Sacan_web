@@ -126,7 +126,7 @@ export default function ScanForm() {
           type="button"
           onClick={handleAnalyze}
           disabled={!canSubmit}
-          className="mt-6 w-full rounded-2xl bg-neutral-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-400"
+          className="tap-feedback mt-6 w-full rounded-2xl bg-neutral-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-400"
         >
           {loading ? "Анализирую..." : "Анализировать"}
         </button>
@@ -146,7 +146,7 @@ export default function ScanForm() {
             <button
               type="button"
               onClick={handleSave}
-              className="w-full rounded-2xl border border-neutral-900 px-4 py-3 text-sm font-semibold text-neutral-900 transition hover:bg-neutral-900 hover:text-white"
+              className="tap-feedback w-full rounded-2xl border border-neutral-900 px-4 py-3 text-sm font-semibold text-neutral-900 transition hover:bg-neutral-900 hover:text-white"
             >
               {saved ? "Сохранено" : "Сохранить в историю"}
             </button>

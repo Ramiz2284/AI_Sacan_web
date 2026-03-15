@@ -22,6 +22,7 @@ body {
   color: var(--foreground);
   font-family: var(--font-manrope), sans-serif;
   min-height: 100vh;
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 h1,
@@ -81,6 +82,57 @@ a {
 
 .fade-in-delay {
   animation: fade-in 0.8s ease 0.2s both;
+}
+
+.tap-feedback {
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.tap-feedback:active {
+  transform: scale(0.98);
+}
+
+.bottom-nav {
+  position: fixed;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  box-shadow: 0 30px 80px -50px rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(16px);
+  z-index: 50;
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: rgba(15, 23, 42, 0.6);
+  padding: 6px 10px;
+  border-radius: 999px;
+  transition: color 0.2s ease, background 0.2s ease, transform 0.15s ease;
+}
+
+.bottom-nav-item:active {
+  transform: scale(0.95);
+}
+
+.bottom-nav-item.active {
+  color: #0f172a;
+  background: rgba(15, 23, 42, 0.08);
+}
+
+@media (min-width: 768px) {
+  .bottom-nav {
+    display: none;
+  }
 }
 
 @keyframes float-slow {

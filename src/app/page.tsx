@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import BottomNav from "@/components/BottomNav";
 
 type HomeLang = "ru" | "tr" | "en";
 
@@ -140,7 +141,7 @@ export default function HomePage() {
           ))}
         </div>
       </header>
-      <main className="mx-auto flex max-w-6xl flex-col gap-10 px-6 pb-20 pt-2">
+      <main className="mx-auto flex max-w-6xl flex-col gap-10 px-6 pb-28 pt-2">
         <section className="grid gap-8 lg:grid-cols-[1.2fr,0.8fr]">
           <div className="glass-panel fade-in rounded-[40px] p-8">
             <p className="text-xs uppercase tracking-[0.3em] text-neutral-500">
@@ -153,13 +154,13 @@ export default function HomePage() {
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 href="/scan"
-                className="rounded-full bg-neutral-900 px-6 py-3 text-sm font-semibold text-white shadow-[0_12px_30px_-20px_rgba(0,0,0,0.7)] transition hover:scale-[1.02] hover:bg-neutral-800"
+                className="tap-feedback rounded-full bg-neutral-900 px-6 py-3 text-sm font-semibold text-white shadow-[0_12px_30px_-20px_rgba(0,0,0,0.7)] transition hover:scale-[1.02] hover:bg-neutral-800"
               >
                 <span className="text-white">{copy.scan}</span>
               </Link>
               <Link
                 href="/history"
-                className="rounded-full border border-neutral-900 px-6 py-3 text-sm font-semibold text-neutral-900 transition hover:bg-neutral-900 hover:text-white"
+                className="tap-feedback rounded-full border border-neutral-900 px-6 py-3 text-sm font-semibold text-neutral-900 transition hover:bg-neutral-900 hover:text-white"
               >
                 {copy.history}
               </Link>
@@ -215,6 +216,7 @@ export default function HomePage() {
           ))}
         </section>
       </main>
+      <BottomNav />
     </div>
   );
 }

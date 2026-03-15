@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import ScanForm from "@/components/ScanForm";
+import BottomNav from "@/components/BottomNav";
 
 export default function ScanPage() {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#fefcf6,_#f5f5f4_45%,_#e7ecf3_100%)] text-neutral-900">
-      <header className="flex items-center justify-between px-6 py-5 text-sm">
+      <header className="hidden items-center justify-between px-6 py-5 text-sm md:flex">
         <Link href="/" className="font-semibold tracking-wide">
           Aiscan
         </Link>
@@ -14,7 +15,7 @@ export default function ScanPage() {
           История
         </Link>
       </header>
-      <main className="mx-auto max-w-6xl px-6 pb-20">
+      <main className="mx-auto max-w-6xl px-6 pb-28">
         <div className="mb-8 max-w-3xl">
           <h1 className="text-3xl font-semibold">Сканирование товара</h1>
           <p className="mt-3 text-sm text-neutral-600">
@@ -24,6 +25,7 @@ export default function ScanPage() {
         </div>
         <ScanForm />
       </main>
+      <BottomNav />
     </div>
   );
 }

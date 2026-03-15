@@ -69,14 +69,14 @@ export default function HistoryList() {
           <button
             type="button"
             onClick={() => exportHistory()}
-            className="rounded-full border border-neutral-900 px-4 py-2 text-xs font-semibold text-neutral-900 transition hover:bg-neutral-900 hover:text-white"
+            className="tap-feedback rounded-full border border-neutral-900 px-4 py-2 text-xs font-semibold text-neutral-900 transition hover:bg-neutral-900 hover:text-white"
           >
             Экспорт
           </button>
           <button
             type="button"
             onClick={handleClearAll}
-            className="rounded-full border border-rose-300 px-4 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-600 hover:text-white"
+            className="tap-feedback rounded-full border border-rose-300 px-4 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-600 hover:text-white"
           >
             Очистить всё
           </button>
@@ -142,7 +142,7 @@ export default function HistoryList() {
                     <button
                       type="button"
                       onClick={() => handleRemove(record.id)}
-                      className="mt-4 text-xs font-semibold text-rose-600 hover:text-rose-700"
+                      className="tap-feedback mt-4 text-xs font-semibold text-rose-600 hover:text-rose-700"
                     >
                       Удалить
                     </button>
