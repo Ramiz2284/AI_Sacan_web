@@ -32,6 +32,27 @@ export default function ScanForm() {
     return () => stopCamera();
   }, []);
 
+  useEffect(() => {
+    if (!cameraOn || !videoRef.current || !streamRef.current) return;
+    const video = videoRef.current;
+    video.srcObject = streamRef.current;
+    video.muted = true;
+    video.autoplay = true;
+    video.playsInline = true;
+    video.setAttribute("playsinline", "true");
+    video.setAttribute("webkit-playsinline", "true");
+    video.onloadedmetadata = () => void video.play();
+    video.onloadeddata = () => void video.play();
+    video.oncanplay = () => void video.play();
+    void video.play();
+    const timer = window.setTimeout(() => {
+      if (video.readyState < 2) {
+        void video.play();
+      }
+    }, 800);
+    return () => window.clearTimeout(timer);
+  }, [cameraOn]);
+
   function handleFileChange(next: File | null) {
     setResult(null);
     setSaved(false);
@@ -108,37 +129,20 @@ export default function ScanForm() {
         audio: false,
       });
       streamRef.current = stream;
-      if (videoRef.current) {
-        const video = videoRef.current;
-        video.srcObject = stream;
-        video.muted = true;
-        video.autoplay = true;
-        video.playsInline = true;
-        video.setAttribute("playsinline", "true");
-        video.setAttribute("webkit-playsinline", "true");
-        video.onloadedmetadata = () => void video.play();
-        video.onloadeddata = () => void video.play();
-        video.oncanplay = () => void video.play();
-        void video.play();
-        window.setTimeout(() => {
-          if (video.readyState < 2) {
-            void video.play();
-          }
-        }, 800);
-        window.setTimeout(() => {
-          if (video.videoWidth === 0 || video.videoHeight === 0) {
-            setError(
-              lang === "ru"
-                ? "Камера запущена, но изображение не получено. Попробуйте другой браузер (Safari/Chrome) или перезапустите страницу."
-                : lang === "tr"
-                ? "Kamera çalışıyor ama görüntü gelmiyor. Farklı tarayıcı deneyin veya sayfayı yenileyin."
-                : "Camera started but no video frame received. Try another browser or reload the page."
-            );
-          }
-        }, 1500);
-      }
       setCameraOn(true);
       setCaptured(false);
+      window.setTimeout(() => {
+        const video = videoRef.current;
+        if (video && (video.videoWidth === 0 || video.videoHeight === 0)) {
+          setError(
+            lang === "ru"
+              ? "Камера запущена, но изображение не получено. Попробуйте другой браузер (Safari/Chrome) или перезапустите страницу."
+              : lang === "tr"
+              ? "Kamera çalışıyor ama görüntü gelmiyor. Farklı tarayıcı deneyin veya sayfayı yenileyin."
+              : "Camera started but no video frame received. Try another browser or reload the page."
+          );
+        }
+      }, 1500);
     } catch {
       setError(
         lang === "ru"
