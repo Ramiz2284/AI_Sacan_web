@@ -131,6 +131,8 @@ export default function HomePage() {
               key={item.id}
               type="button"
               onClick={() => setLang(item.id)}
+              aria-pressed={lang === item.id}
+              aria-label={`Language: ${item.label}`}
               className={`rounded-full px-3 py-1 text-xs font-medium transition ${
                 lang === item.id
                   ? "bg-neutral-900 text-white"

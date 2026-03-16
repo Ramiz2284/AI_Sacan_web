@@ -6,17 +6,13 @@ import { saveToHistory } from '@/lib/storage'
 import type { ProductAnalysis } from '@/lib/types'
 import { useEffect, useRef, useState } from 'react'
 
-const ACCEPTED_TYPES = [
-	'image/jpeg',
-	'image/png',
-	'image/webp',
-	'image/heic',
-	'image/heif',
-]
+const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+const MAX_IMAGE_CHARS = 6_000_000
 
 export default function ScanForm() {
 	const [file, setFile] = useState<File | null>(null)
 	const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+	const previewUrlRef = useRef<string | null>(null)
 	const [cameraOn, setCameraOn] = useState(false)
 	const [captured, setCaptured] = useState(false)
 	const videoRef = useRef<HTMLVideoElement | null>(null)
@@ -35,7 +31,13 @@ export default function ScanForm() {
 	}, [])
 
 	useEffect(() => {
-		return () => stopCamera()
+		return () => {
+			stopCamera()
+			if (previewUrlRef.current) {
+				URL.revokeObjectURL(previewUrlRef.current)
+				previewUrlRef.current = null
+			}
+		}
 	}, [])
 
 	useEffect(() => {
@@ -68,7 +70,12 @@ export default function ScanForm() {
 			setPreviewUrl(null)
 			return
 		}
+		if (previewUrlRef.current) {
+			URL.revokeObjectURL(previewUrlRef.current)
+			previewUrlRef.current = null
+		}
 		const url = URL.createObjectURL(next)
+		previewUrlRef.current = url
 		setPreviewUrl(url)
 		void handleAnalyze(next)
 	}
@@ -83,6 +90,9 @@ export default function ScanForm() {
 			const base64 = await fileToDataUrl(fileToSend, enhance)
 			const controller = new AbortController()
 			const timeout = window.setTimeout(() => controller.abort(), 45000)
+			if (base64.length > MAX_IMAGE_CHARS) {
+				throw new Error('Слишком большое изображение. Уменьши фото и попробуй ещё раз.')
+			}
 			const response = await fetch('/api/analyze', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -200,6 +210,9 @@ export default function ScanForm() {
 			const base64 = await fileToDataUrlFromDataUrl(previewUrl, enhance)
 			const controller = new AbortController()
 			const timeout = window.setTimeout(() => controller.abort(), 45000)
+			if (base64.length > MAX_IMAGE_CHARS) {
+				throw new Error('Слишком большое изображение. Уменьши фото и попробуй ещё раз.')
+			}
 			const response = await fetch('/api/analyze', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
@@ -230,7 +243,7 @@ export default function ScanForm() {
 	return (
 		<div className='grid gap-6 lg:grid-cols-[1fr,1.2fr]'>
 			{loading && (
-				<div className='scan-overlay'>
+				<div className='scan-overlay' role='status' aria-live='polite'>
 					<div className='scan-panel'>
 						<div className='relative mx-auto mb-6 h-40 w-40'>
 							<div className='scan-glow' />

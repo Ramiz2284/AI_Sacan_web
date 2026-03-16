@@ -6,8 +6,8 @@ import { useEffect, useState } from "react";
 import { AppLang, getStoredLang } from "@/lib/i18n";
 
 const LABELS: Record<AppLang, { home: string; scan: string; history: string }> = {
-  ru: { home: "Главная", scan: "Скан", history: "История" },
-  tr: { home: "Ana", scan: "Tara", history: "Geçmiş" },
+  ru: { home: "???????", scan: "????", history: "???????" },
+  tr: { home: "Ana", scan: "Tara", history: "Ge�mis" },
   en: { home: "Home", scan: "Scan", history: "History" },
 };
 
@@ -74,7 +74,7 @@ export default function BottomNav() {
   }, []);
 
   return (
-    <nav className="bottom-nav">
+    <nav className="bottom-nav" aria-label="Primary">
       {(
         [
           { href: "/", label: LABELS[lang].home, icon: navIcons.home },
@@ -88,6 +88,7 @@ export default function BottomNav() {
             key={item.href}
             href={item.href}
             className={`bottom-nav-item ${active ? "active" : ""}`}
+            aria-current={active ? "page" : undefined}
           >
             {item.icon}
             <span>{item.label}</span>

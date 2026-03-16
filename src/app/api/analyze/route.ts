@@ -4,6 +4,10 @@ import { WATCHLIST_ADDITIVES } from "@/lib/watchlist";
 import type { ProductAnalysis, Source } from "@/lib/types";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const MAX_IMAGE_CHARS = 6_000_000;
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX = 20;
+const rateBuckets = new Map<string, { count: number; resetAt: number }>();
 
 export async function POST(request: Request) {
   try {
@@ -21,6 +25,23 @@ export async function POST(request: Request) {
 
     if (!body?.imageDataUrl) {
       return NextResponse.json({ error: "Missing imageDataUrl" }, { status: 400 });
+    }
+    if (body.imageDataUrl.length > MAX_IMAGE_CHARS) {
+      return NextResponse.json(
+        { error: "Image is too large. Please use a smaller photo." },
+        { status: 413 }
+      );
+    }
+    if (!body.imageDataUrl.startsWith("data:image/")) {
+      return NextResponse.json({ error: "Invalid image format." }, { status: 400 });
+    }
+
+    const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    if (!checkRateLimit(ip)) {
+      return NextResponse.json(
+        { error: "Rate limit exceeded. Please try again later." },
+        { status: 429 }
+      );
     }
 
     const userText = body.userText?.trim() ?? "";
@@ -240,7 +261,7 @@ async function getExternalIngredients(userText: string): Promise<{
   if (barcodeMatch) {
     const barcode = barcodeMatch[0];
     const url = `https://world.openfoodfacts.org/api/v2/product/${barcode}.json?fields=product_name,brands,ingredients_text,ingredients_text_en,ingredients_text_ru,ingredients_text_tr,categories,code`;
-    const response = await fetch(url);
+    const response = await fetchWithTimeout(url, 8000);
     if (response.ok) {
       const data = await response.json();
       if (data?.product) {
@@ -269,7 +290,7 @@ async function getExternalIngredients(userText: string): Promise<{
   const searchUrl = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(
     userText
   )}&search_simple=1&action=process&json=1&page_size=1`;
-  const searchResponse = await fetch(searchUrl);
+  const searchResponse = await fetchWithTimeout(searchUrl, 8000);
   if (!searchResponse.ok) {
     return { externalIngredients: null, externalSources: [] };
   }
@@ -298,5 +319,27 @@ async function getExternalIngredients(userText: string): Promise<{
       },
     ],
   };
+}
+
+function checkRateLimit(key: string) {
+  const now = Date.now();
+  const current = rateBuckets.get(key);
+  if (!current || now > current.resetAt) {
+    rateBuckets.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return true;
+  }
+  if (current.count >= RATE_LIMIT_MAX) return false;
+  current.count += 1;
+  return true;
+}
+
+async function fetchWithTimeout(url: string, timeoutMs: number) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
