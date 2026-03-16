@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -6,8 +6,8 @@ import { useEffect, useState } from "react";
 import { AppLang, getStoredLang } from "@/lib/i18n";
 
 const LABELS: Record<AppLang, { home: string; scan: string; history: string }> = {
-  ru: { home: "???????", scan: "????", history: "???????" },
-  tr: { home: "Ana", scan: "Tara", history: "Ge�mis" },
+  ru: { home: "Главная", scan: "Скан", history: "История" },
+  tr: { home: "Ana", scan: "Tara", history: "Geçmiş" },
   en: { home: "Home", scan: "Scan", history: "History" },
 };
 
