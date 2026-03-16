@@ -7,7 +7,7 @@ import { AppLang, getStoredLang } from "@/lib/i18n";
 
 const LABELS: Record<AppLang, { home: string; scan: string; history: string }> = {
   ru: { home: "???????", scan: "????", history: "???????" },
-  tr: { home: "Ana", scan: "Tara", history: "Geçmis" },
+  tr: { home: "Ana", scan: "Tara", history: "Geï¿½mis" },
   en: { home: "Home", scan: "Scan", history: "History" },
 };
 
